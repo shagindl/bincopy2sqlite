@@ -1,0 +1,1 @@
+bincopy convert -i ihex -o binary fwm.hex fwm.bin

@@ -1,0 +1,17 @@
+{
+    // Используйте IntelliSense, чтобы узнать о возможных атрибутах.
+    // Наведите указатель мыши, чтобы просмотреть описания существующих атрибутов.
+    // Для получения дополнительной информации посетите: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python 3.9.0: Bincopy2sqlite2",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "python": "C:\\Users\\shagin\\AppData\\Local\\Programs\\Python\\Python39\\python.exe",
+            "console": "integratedTerminal",
+            "args": ["recipe_FW.db", "5010_DBG_VH2.hex"]
+        }
+    ]
+}

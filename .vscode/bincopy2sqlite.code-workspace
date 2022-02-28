@@ -1,0 +1,28 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		}
+	],
+	"settings": {
+		"files.exclude": {
+			".vscode": true,
+			"**/.github": true,
+			"docs": true,
+			"tests": true
+		},
+		"python.defaultInterpreterPath": "C:\\\\Users\\\\shagin\\\\AppData\\\\Local\\\\Programs\\\\Python\\\\Python39\\\\python.exe"
+	},
+	"launch": {
+		"version": "0.2.0",
+		"configurations": [
+			{
+				"name": "Python: Текущий файл",
+				"type": "python",
+				"request": "launch",
+				"program": "${file}",
+				"console": "integratedTerminal"
+			}
+		]
+	}
+}
