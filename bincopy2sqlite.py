@@ -21,7 +21,7 @@ class Bin2Db:
         self.db = self.open_db(file_db, Config.NAMES_TBL)
         # -- Open hex fwm 0x08000000 B006      ADD      sp,sp,#0x18 <bytearray, len() = 1879179264>
         self.fwm_file = bincopy.BinFile(file_hex)
-        self.fwm_name = '.'.join(file_hex.split('.')[:-1])
+        self.fwm_name = ( '.'.join(file_hex.split('.')[:-1]) ).split('\\')[-1]
         pass
     def __del__(self):
         # -- Close DB
@@ -47,22 +47,38 @@ class Bin2Db:
     def insert_crc(self):
         # Calculated CRC
         self.crc = 0
-        ADDR = Config.ADDR_FWM_BASE + Config.ADDR_FWM_CRC
+        self.size_renew = 0
+        ADDR_FWM_CRC = Config.ADDR_FWM_BASE + Config.OFFSET_FWM_CRC
         for address, data in self.fwm_file.segments:
-            if address + len(data) > ADDR:
-                INDX = ADDR - address
+            self.size_renew += len(data)
+            if address + len(data) > ADDR_FWM_CRC:
+                INDX_FWM_CRC = ADDR_FWM_CRC - address
                 for indx in range(len(data)):
-                    if indx < INDX or (INDX + 4) <= indx:
+                    if indx < INDX_FWM_CRC or (INDX_FWM_CRC + 4) <= indx:
+                        self.crc = self._crc32_update(self.crc, data[indx])
+            elif address + len(data) > Config.ADDR_INT_FLASH:
+                INDX_INT_FLASH = Config.ADDR_INT_FLASH - address
+                for indx in range(len(data)):
+                    if indx < INDX_INT_FLASH or (INDX_INT_FLASH + Config.SIZE_INT_FLASH) <= indx :
                         self.crc = self._crc32_update(self.crc, data[indx])
             else:
                 self.crc = self.crc32_update(self.crc, data, len(data))
-        # Insert CRC
+        # Insert CRC_FWM
         for address, data in self.fwm_file.segments:
-            if address + len(data) > ADDR:
-                INDX = ADDR - address
+            if address + len(data) > ADDR_FWM_CRC:
+                INDX_FWM_CRC = ADDR_FWM_CRC - address
                 for indx in range(len(data)):
-                    if INDX <= indx and indx < (INDX + 4):
-                        data[indx : indx + 4] = self.crc.to_bytes(4, byteorder = 'big')
+                    if INDX_FWM_CRC <= indx and indx < (INDX_FWM_CRC + 4):
+                        data[indx : indx + 4] = self.crc.to_bytes(4, byteorder = 'little')
+                        break
+        # Insert SIZE_FWM
+        ADDR_RENEW_SIZE = Config.ADDR_FWM_BASE + Config.OFFSET_RENEW_SIZE
+        for address, data in self.fwm_file.segments:
+            if address + len(data) > ADDR_RENEW_SIZE:
+                INDX_RENEW_SIZE = ADDR_RENEW_SIZE - address
+                for indx in range(len(data)):
+                    if INDX_RENEW_SIZE <= indx and indx < (INDX_RENEW_SIZE + 4):
+                        data[indx : indx + 4] = self.size_renew.to_bytes(4, byteorder = 'little')
                         break
         pass
 
@@ -89,12 +105,12 @@ class Bin2Db:
             pass
     
     def write_info_fwm(self, name_tbl):
-        ADDR = Config.ADDR_FWM_BASE + Config.ADDR_FWM_VER
+        ADDR_FWM_VER = Config.ADDR_FWM_BASE + Config.OFFSET_RENEW_VER
         for address, data in self.fwm_file.segments:
-            if(address <= ADDR and ADDR <= (address + len(data))):
-                addr_ver = ADDR - address
+            if(address <= ADDR_FWM_VER and ADDR_FWM_VER <= (address + len(data))):
+                addr_ver = ADDR_FWM_VER - address
                 data_ver = data[addr_ver : addr_ver + 4]
-                ver = int.from_bytes(data_ver, byteorder='big', signed=False)
+                ver = int.from_bytes(data_ver, byteorder='little', signed=False)
             pass
 
         # cur.execute(''' INSERT INTO "FWM_INFO" VALUES (ver, name, num_items_data) ''')
@@ -129,6 +145,6 @@ if __name__ == "__main__":
     cnv = Bin2Db(sys.argv[1], sys.argv[2])
     cnv.Convert()
     del cnv
-    print("Convert complited!")
+    print("bincopy2sqlite. Convert complited!")
 
 # bincopy info "./fwm.hex"

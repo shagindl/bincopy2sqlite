@@ -11,7 +11,7 @@
             "program": "${file}",
             "python": "C:\\Users\\shagin\\AppData\\Local\\Programs\\Python\\Python39\\python.exe",
             "console": "integratedTerminal",
-            "args": ["recipe_FW.db", "5010_DBG_VH2.hex"]
+            "args": ["recipe_FW.db", ".\\Output\\5010_VH2_DBG_0.2.1.3.hex"]
         }
     ]
 }
