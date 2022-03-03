@@ -46,23 +46,29 @@ class Bin2Db:
         return crc;
     def insert_crc(self):
         # Calculated CRC
+        _crc = 0
         self.crc = 0
         self.size_renew = 0
         ADDR_FWM_CRC = Config.ADDR_FWM_BASE + Config.OFFSET_FWM_CRC
         for address, data in self.fwm_file.segments:
-            self.size_renew += len(data)
-            if address + len(data) > ADDR_FWM_CRC:
-                INDX_FWM_CRC = ADDR_FWM_CRC - address
-                for indx in range(len(data)):
-                    if indx < INDX_FWM_CRC or (INDX_FWM_CRC + 4) <= indx:
+            _crc = self.crc32_update(_crc, data[4:], len(data[4:]))
+            _crc = self.crc32_update(_crc, data[0:], len(data[:0x400]))
+            _crc = self.crc32_update(_crc, data[0x500:], len(data[0x500:]))
+
+            for indx in range(len(data)):
+                addr = address + indx
+                # Skip Bootloader
+                if addr >= Config.ADDR_RENEW:
+                    self.size_renew += 1
+                    # Skip FWM_CRC
+                    if (ADDR_FWM_CRC <= addr) and (addr < (ADDR_FWM_CRC + 4)):
+                        pass
+                    # Skip INT_FLASH
+                    elif (Config.ADDR_INT_FLASH <= addr) and (addr < (Config.ADDR_INT_FLASH + Config.SIZE_INT_FLASH)):
+                        pass
+                    else:
                         self.crc = self._crc32_update(self.crc, data[indx])
-            elif address + len(data) > Config.ADDR_INT_FLASH:
-                INDX_INT_FLASH = Config.ADDR_INT_FLASH - address
-                for indx in range(len(data)):
-                    if indx < INDX_INT_FLASH or (INDX_INT_FLASH + Config.SIZE_INT_FLASH) <= indx :
-                        self.crc = self._crc32_update(self.crc, data[indx])
-            else:
-                self.crc = self.crc32_update(self.crc, data, len(data))
+        pass
         # Insert CRC_FWM
         for address, data in self.fwm_file.segments:
             if address + len(data) > ADDR_FWM_CRC:
